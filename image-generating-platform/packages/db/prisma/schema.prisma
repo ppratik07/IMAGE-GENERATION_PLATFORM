@@ -27,10 +27,11 @@ model Model {
   type           ModelTypeEnum
   age            Int
   ethinicity     EthnicityEnum
-  userId         EyeColorEnum
+  eyeColor       EyeColorEnum
   bald           Boolean
   trainingImages TrainingImages[]
   outputImages   OutputImages[]
+  userId         String
 }
 
 model TrainingImages {
