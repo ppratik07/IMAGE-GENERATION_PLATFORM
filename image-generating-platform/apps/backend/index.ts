@@ -102,9 +102,16 @@ app.post("/pack/generate", async(req, res) => {
     }
 });
 
-app.get("/pack/bulk", (req, res) => {});
+app.get("/pack/bulk", async(req, res) => {
+    const pack = await prismaClient.packPrompts.findMany({})
+    res.json({
+        packs : pack
+    })
+});
 
-app.get("/image", (req, res) => {});
+app.get("/image", (req, res) => {
+    
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
