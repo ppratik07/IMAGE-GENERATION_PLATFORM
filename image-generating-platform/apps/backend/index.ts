@@ -45,72 +45,81 @@ app.post("/ai/training", async (req, res) => {
   }
 });
 
-app.post("/ai/generate", async(req, res) => {
-    try {
-        const parsedBody = GenerateImage.safeParse(req.body);
-        if(!parsedBody){
-            res.status(411).json({
-                message : "Input Incorrect"
-            });
-            return;
-        }
-        const data = await prismaClient.outputImages.create({
-            data : {
-                prompt : parsedBody.data?.prompt || "",
-                modelId : parsedBody.data?.modelId || "",
-                userId: USER_ID,
-                imageUrl : ""
-            }
-        })
-        res.json({
-            imageId : data.id
-        })
-    } catch (error) {
-        
+app.post("/ai/generate", async (req, res) => {
+  try {
+    const parsedBody = GenerateImage.safeParse(req.body);
+    if (!parsedBody) {
+      res.status(411).json({
+        message: "Input Incorrect",
+      });
+      return;
     }
-});
-
-app.post("/pack/generate", async(req, res) => {
-    try {
-        const parsedBody = GenerateImagesFromPack.safeParse(req.body);
-        if (!parsedBody) {
-        res.status(411).json({
-            message: "Input Incorrect",
-        });
-        return;
-        }
-        const prompts = await prismaClient.packPrompts.findMany({
-            where : {
-                packId : parsedBody.data?.packId || ""
-            }
-        })
-        const images = await prismaClient.outputImages.createManyAndReturn({
-            data : prompts.map((prompt) => ({
-                prompt : prompt.prompt,
-                modelId : parsedBody.data?.modelId || "",
-                userId : USER_ID,
-                imageUrl : ""
-            }))
-        })
-        res.json({
-            images : images.map((image)=> image.id)
-        })
-    } catch (error) {
-        res.status(500).json({
-        message: "Internal Server Error",
-        });
-    }
-});
-
-app.get("/pack/bulk", async(req, res) => {
-    const pack = await prismaClient.packPrompts.findMany({})
+    const data = await prismaClient.outputImages.create({
+      data: {
+        prompt: parsedBody.data?.prompt || "",
+        modelId: parsedBody.data?.modelId || "",
+        userId: USER_ID,
+        imageUrl: "",
+      },
+    });
     res.json({
-        packs : pack
-    })
+      imageId: data.id,
+    });
+  } catch (error) {}
 });
 
-app.get("/image", (req, res) => {
-    
+app.post("/pack/generate", async (req, res) => {
+  try {
+    const parsedBody = GenerateImagesFromPack.safeParse(req.body);
+    if (!parsedBody) {
+      res.status(411).json({
+        message: "Input Incorrect",
+      });
+      return;
+    }
+    const prompts = await prismaClient.packPrompts.findMany({
+      where: {
+        packId: parsedBody.data?.packId || "",
+      },
+    });
+    const images = await prismaClient.outputImages.createManyAndReturn({
+      data: prompts.map((prompt) => ({
+        prompt: prompt.prompt,
+        modelId: parsedBody.data?.modelId || "",
+        userId: USER_ID,
+        imageUrl: "",
+      })),
+    });
+    res.json({
+      images: images.map((image) => image.id),
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+});
+
+app.get("/pack/bulk", async (req, res) => {
+  const pack = await prismaClient.packPrompts.findMany({});
+  res.json({
+    packs: pack,
+  });
+});
+
+app.get("/image/bulk", (req, res) => {
+  const images = req.query.images as string[];
+  const imagesData = prismaClient.outputImages.findMany({
+    where: {
+      id: {
+        in: images,
+      },
+      userId: USER_ID,
+    },
+  });
+  res.json({
+    images: imagesData,
+  });
 });
 
 app.listen(PORT, () => {
